@@ -37,13 +37,13 @@ def load_training_games() -> List[List]:
         games = []
         for line in reader:
             games.append(line)
-        return games
+    return games
 
 
 def map_decks_by_name(decks: List[Dict]) -> Dict:
     decks_dict = {}
     for deck in decks:
-        decks_dict[deck['deckName'][0]] = deck
+        decks_dict[deck['deckName']] = deck
     return decks_dict
 
 
@@ -61,8 +61,8 @@ def all_card_names(decks: List[Dict]) -> Dict[str, int]:
 def all_hero_types(decks: List[Dict]) -> Dict[str, int]:
     all_heroes = {}
     for deck in decks:
-        if deck['hero'][0] in all_heroes:
+        if deck['hero'] in all_heroes:
             pass
         else:
-            all_heroes[deck['hero'][0]] = len(all_heroes)
+            all_heroes[deck['hero']] = len(all_heroes)
     return all_heroes
