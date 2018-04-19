@@ -31,12 +31,17 @@ def load_test_decks() -> List[Dict]:
     return load_decks('data/testDecks.json')
 
 
-def load_training_games() -> List[List]:
+def load_training_games() -> List[Dict]:
     with open('data/training_games.csv') as file:
         reader = csv.reader(file, delimiter=';')
         games = []
+        field_names = ['id', 'bot0', 'deck0', 'bot1', 'deck1', 'winner']
         for line in reader:
-            games.append(line)
+            game = {}
+            for name, value in zip(field_names, line):
+                game[name] = value
+            game['winner'] = int(game['winner'][7])
+            games.append(game)
     return games
 
 
