@@ -23,8 +23,7 @@ def load_training_games() -> List[List]:
         games = []
         for line in reader:
             games.append(line)
-        return games[1:]
-    return games
+        return games
 
 
 def map_decks_by_name(decks: List[Dict]) -> Dict:
