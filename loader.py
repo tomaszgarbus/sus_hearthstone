@@ -45,11 +45,3 @@ def all_card_names(decks: List[Dict]) -> Dict[str, int]:
                 all_names[card_name] = len(all_names)
     print(len(all_names))
     return all_names
-
-
-if __name__ == '__main__':
-    training_decks = load_training_decks()
-    test_decks = load_test_decks()
-    games = load_training_games()
-    decks = map_decks_by_name(training_decks)
-    print(decks)
