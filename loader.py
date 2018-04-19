@@ -55,5 +55,14 @@ def all_card_names(decks: List[Dict]) -> Dict[str, int]:
                 pass
             else:
                 all_names[card_name] = len(all_names)
-    print(len(all_names))
     return all_names
+
+
+def all_hero_types(decks: List[Dict]) -> Dict[str, int]:
+    all_heroes = {}
+    for deck in decks:
+        if deck['hero'][0] in all_heroes:
+            pass
+        else:
+            all_heroes[deck['hero'][0]] = len(all_heroes)
+    return all_heroes
