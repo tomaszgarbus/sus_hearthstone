@@ -1,21 +1,34 @@
-import json
 import csv
+import json
+
 from typing import Dict, List
-import logging
+
+
+def remove_one_element_lists(d: dict):
+    for key, value in d.items():
+        if isinstance(value, list) and len(value) == 1:
+            d[key] = value[0]
+        if isinstance(d[key], dict):
+            remove_one_element_lists(d[key])
+
+
+def load_decks(filename: str) -> List[Dict]:
+    decks = []
+    with open(filename) as file:
+        lines = file.read().strip().split('\n')
+        for line in lines:
+            deck = json.loads(line)
+            remove_one_element_lists(deck)
+            decks.append(deck)
+    return decks
 
 
 def load_training_decks() -> List[Dict]:
-    with open('data/trainingDecks.json') as file:
-        lines = file.read().split('\n')
-        decks = list(map(json.JSONDecoder().decode, lines[:-1]))
-        return decks
+    return load_decks('data/trainingDecks.json')
 
 
 def load_test_decks() -> List[Dict]:
-    with open('data/testDecks.json') as file:
-        lines = file.read().split('\n')
-        decks = list(map(json.JSONDecoder().decode, lines[:-1]))
-        return decks
+    return load_decks('data/testDecks.json')
 
 
 def load_training_games() -> List[List]:
@@ -24,8 +37,7 @@ def load_training_games() -> List[List]:
         games = []
         for line in reader:
             games.append(line)
-        return games[1:]
-    return games
+        return games
 
 
 def map_decks_by_name(decks: List[Dict]) -> Dict:
