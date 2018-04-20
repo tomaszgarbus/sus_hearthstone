@@ -3,7 +3,7 @@ from collections import defaultdict
 from loader import *
 
 
-def print_counter(ctr):
+def print_counter(ctr: defaultdict):
     print('count', len(ctr))
     print('min', min(ctr.items(), key=lambda x: x[1]))
     print('max', max(ctr.items(), key=lambda x: x[1]))
