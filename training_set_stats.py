@@ -10,7 +10,9 @@ def print_counter(ctr: defaultdict):
 
 
 if __name__ == '__main__':
+    print('example deck', load_training_decks()[0])
     training_games = load_training_games()
+    print('example game', training_games[0])
     bot_counter = defaultdict(lambda: 0)
     deck_counter = defaultdict(lambda: 0)
     pair_counter = defaultdict(lambda: 0)

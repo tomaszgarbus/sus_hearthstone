@@ -3,6 +3,8 @@ import json
 
 from typing import Dict, List
 
+bot_list = ['A1', 'A2', 'B1', 'B2']
+
 
 def remove_one_element_lists(d: dict):
     for key, value in d.items():
