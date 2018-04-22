@@ -1,10 +1,11 @@
-from loader import load_training_decks, load_training_games, load_test_decks
 from collections import defaultdict
+from typing import List
+
 from crossval import crossval
-from loader import bot_list
+from loader import bot_list, load_test_decks, load_training_decks, load_training_games
 
 
-def calculate_deck_distance(deck1: dict, deck2: dict):
+def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
     if deck1['hero'] != deck2['hero']:
         return 31
     distance = 30
@@ -20,8 +21,8 @@ class KNN:
     training_decks = []
     training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
 
-    def __init__(self, training_games, training_decks, k=9):
-        self.k = k
+    def __init__(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
+        self.k = config['k']
         self.training_games = training_games
         self.training_decks = training_decks
         for game in training_games:
@@ -36,7 +37,7 @@ class KNN:
 
     # deck1 must be a deck from the training set
     # return the probability of deck0 winning the game
-    def predict_match_result(self, bot0, deck0, bot1, deck1):
+    def predict_match_result(self, bot0: str, deck0: dict, bot1: str, deck1: dict) -> float:
         player1 = (bot1, deck1)
         player1_results = self.training_results[player1]
         results_sum = (0, 0)
@@ -52,7 +53,7 @@ class KNN:
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot, deck):
+    def predict(self, bot: str, deck: dict) -> float:
         winrate = 0
         for player in self.training_results:
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
@@ -60,13 +61,20 @@ class KNN:
         return winrate * 100
 
 
-def main():
+def knn_test() -> None:
+    print('Testing KNN with cross validation')
+    training_games = load_training_games()
+    training_decks = load_training_decks()
+    print('Cross validation score:', crossval(4, training_games, training_decks, KNN, {'k': 9}))
+
+
+def knn_solve() -> None:
+    print('Generating data/submission.csv')
     training_games = load_training_games()
     training_decks = load_training_decks()
     test_decks = sorted(load_test_decks(), key=lambda d: d['deckName'])
-    # print('Score:', crossval(4, training_games, training_decks, KNN))
-    knn = KNN(training_games, training_decks)
-    with open('submission.csv', 'w') as f:
+    knn = KNN(training_games, training_decks, {'k': 9})
+    with open('data/submission.csv', 'w') as f:
         for bot in bot_list:
             for deck in test_decks:
                 print(bot, deck['deckName'])
@@ -74,4 +82,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    knn_test()
+    knn_solve()

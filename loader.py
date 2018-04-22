@@ -1,12 +1,11 @@
 import csv
 import json
-
 from typing import Dict, List
 
 bot_list = ['A1', 'A2', 'B1', 'B2']
 
 
-def remove_one_element_lists(d: dict):
+def remove_one_element_lists(d: dict) -> None:
     for key, value in d.items():
         if isinstance(value, list) and len(value) == 1:
             d[key] = value[0]
@@ -14,7 +13,7 @@ def remove_one_element_lists(d: dict):
             remove_one_element_lists(d[key])
 
 
-def load_decks(filename: str) -> List[Dict]:
+def load_decks(filename: str) -> List[dict]:
     decks = []
     with open(filename) as file:
         lines = file.read().strip().split('\n')
@@ -25,15 +24,15 @@ def load_decks(filename: str) -> List[Dict]:
     return decks
 
 
-def load_training_decks() -> List[Dict]:
+def load_training_decks() -> List[dict]:
     return load_decks('data/trainingDecks.json')
 
 
-def load_test_decks() -> List[Dict]:
+def load_test_decks() -> List[dict]:
     return load_decks('data/testDecks.json')
 
 
-def load_training_games() -> List[Dict]:
+def load_training_games() -> List[dict]:
     with open('data/training_games.csv') as file:
         reader = csv.reader(file, delimiter=';')
         games = []
@@ -47,14 +46,14 @@ def load_training_games() -> List[Dict]:
     return games
 
 
-def map_decks_by_name(decks: List[Dict]) -> Dict:
+def map_decks_by_name(decks: List[dict]) -> dict:
     decks_dict = {}
     for deck in decks:
         decks_dict[deck['deckName']] = deck
     return decks_dict
 
 
-def all_card_names(decks: List[Dict]) -> Dict[str, int]:
+def all_card_names(decks: List[dict]) -> Dict[str, int]:
     all_names = {}
     for deck in decks:
         for card_name in deck['cards']:
@@ -65,7 +64,7 @@ def all_card_names(decks: List[Dict]) -> Dict[str, int]:
     return all_names
 
 
-def all_hero_types(decks: List[Dict]) -> Dict[str, int]:
+def all_hero_types(decks: List[dict]) -> Dict[str, int]:
     all_heroes = {}
     for deck in decks:
         if deck['hero'] in all_heroes:

@@ -1,10 +1,12 @@
 import math
 import random
 from collections import defaultdict
+from typing import List
+
 from loader import bot_list
 
 
-def crossval(folds, games, decks, model):
+def crossval(folds: int, games: List[dict], decks: List[dict], model, model_config: dict):
     random.shuffle(decks)
     fold_decks = len(decks) // folds
     wins = defaultdict(lambda: (0, 0))
@@ -29,7 +31,7 @@ def crossval(folds, games, decks, model):
         training_deck_names = [d['deckName'] for d in training_decks]
         training_games = list(filter(
             lambda g: g['deck0'] in training_deck_names and g['deck1'] in training_deck_names, games))
-        trained_model = model(training_games, training_decks)
+        trained_model = model(training_games, training_decks, model_config)
         rmse = 0
         ctr = 0
         n = len(test_decks) * len(bot_list)

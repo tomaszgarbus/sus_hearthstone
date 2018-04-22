@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from loader import *
+from loader import load_training_decks, load_training_games
 
 
-def print_counter(ctr: defaultdict):
+def print_counter(ctr: dict) -> None:
     print('count', len(ctr))
     print('min', min(ctr.items(), key=lambda x: x[1]))
     print('max', max(ctr.items(), key=lambda x: x[1]))
