@@ -69,5 +69,5 @@ class KNN:
 
 
 if __name__ == '__main__':
-    test_model(KNN, {'k': 1000})
+    # test_model(KNN, {'k': 1000})
     generate_submission(KNN, {'k': 1000})
