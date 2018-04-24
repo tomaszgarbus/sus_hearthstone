@@ -1,16 +1,18 @@
 from collections import defaultdict
 
-from loader import *
+from loader import load_training_decks, load_training_games
 
 
-def print_counter(ctr: defaultdict):
+def print_counter(ctr: dict) -> None:
     print('count', len(ctr))
     print('min', min(ctr.items(), key=lambda x: x[1]))
     print('max', max(ctr.items(), key=lambda x: x[1]))
 
 
 if __name__ == '__main__':
+    print('example deck', load_training_decks()[0])
     training_games = load_training_games()
+    print('example game', training_games[0])
     bot_counter = defaultdict(lambda: 0)
     deck_counter = defaultdict(lambda: 0)
     pair_counter = defaultdict(lambda: 0)
