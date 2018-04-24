@@ -5,7 +5,7 @@ from progress.helpers import SHOW_CURSOR
 from crossval import crossval
 
 
-def test_model(model, model_config) -> None:
+def test_model(model, model_config = {}) -> None:
     print('Testing {} with cross validation'.format(model.__name__))
     training_games = load_training_games()
     training_decks = load_training_decks()

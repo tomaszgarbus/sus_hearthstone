@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from loader import load_training_decks, load_training_games
+from loader import load_training_decks, load_training_games, all_hero_types
 
 
 def print_counter(ctr: dict) -> None:
@@ -13,6 +13,7 @@ if __name__ == '__main__':
     print('example deck', load_training_decks()[0])
     training_games = load_training_games()
     print('example game', training_games[0])
+    print(all_hero_types(load_training_decks()))
     bot_counter = defaultdict(lambda: 0)
     deck_counter = defaultdict(lambda: 0)
     pair_counter = defaultdict(lambda: 0)

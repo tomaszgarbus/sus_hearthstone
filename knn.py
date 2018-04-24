@@ -1,9 +1,8 @@
 from collections import defaultdict
-from typing import List
+from typing import List, Dict
 
-from crossval import crossval
-from loader import bot_list, load_test_decks, load_training_decks, load_training_games
-from tester import test_model, generate_submission
+from base_model import BaseModel
+from tester import generate_submission, test_model
 
 
 def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
@@ -16,7 +15,7 @@ def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
     return distance
 
 
-class KNN:
+class KNN(BaseModel):
     k = 1
     training_games = []
     training_decks = []
@@ -36,8 +35,6 @@ class KNN:
             self.training_results[player0][player1] = wins
             self.training_results[player1][player0] = (wins[1], wins[0])
 
-    # deck1 must be a deck from the training set
-    # return the probability of deck0 winning the game
     def predict_match_result(self, bot0: str, deck0: dict, bot1: str, deck1: dict) -> float:
         player1 = (bot1, deck1)
         player1_results = self.training_results[player1]
@@ -60,14 +57,15 @@ class KNN:
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot: str, deck: dict) -> float:
+    def predict(self, bot: str, deck: Dict) -> float:
         winrate = 0
         for player in self.training_results:
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
         winrate /= len(self.training_results)
+        print(winrate)
         return winrate * 100
 
 
 if __name__ == '__main__':
-    # test_model(KNN, {'k': 1000})
-    generate_submission(KNN, {'k': 1000})
+    test_model(KNN, {'k': 1000})
+    # generate_submission(KNN, {'k': 1000})
