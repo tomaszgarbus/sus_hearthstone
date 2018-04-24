@@ -1,13 +1,18 @@
 import loader
 from typing import List, Dict, Callable
+import numpy as np
 
+def _one_hot(val:int, maxval:int) -> np.ndarray:
+    ret = np.zeros((maxval,), dtype='float32')
+    ret[val] = 1.
+    return ret
 
 def build_single_player_input(deck: Dict,
                 bot_id: bool = True,
                 hero_id: bool = True,
                 cards_cardinality: bool = True,
                 cards_cardinality_funs1: Callable[int] = [],
-                cards_cardinality_funs2: Callable[int, int] = []):
+                cards_cardinality_funs2: Callable[int, int] = []) -> np.ndarray:
     """
     Generates input vector for one player in a game.
     Following parameters will be appended with True:
@@ -26,4 +31,7 @@ def build_single_player_input(deck: Dict,
         to input vector.
     :return:
     """
+    features = []
+    if bot_id:
+        features.append(_one_hot())
     raise NotImplementedError
