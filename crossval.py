@@ -1,6 +1,7 @@
 import math
 import random
 from collections import defaultdict
+from progress.bar import Bar
 from typing import List
 
 from loader import bot_list
@@ -31,16 +32,19 @@ def crossval(folds: int, games: List[dict], decks: List[dict], model, model_conf
         training_deck_names = [d['deckName'] for d in training_decks]
         training_games = list(filter(
             lambda g: g['deck0'] in training_deck_names and g['deck1'] in training_deck_names, games))
-        trained_model = model(training_games, training_decks, model_config)
-        rmse = 0
+        model_instance = model()
+        model_instance.learn(training_games, training_decks, model_config)
+        rmse = 0.0
         ctr = 0
         n = len(test_decks) * len(bot_list)
+        bar = Bar('', max=n, suffix='%(index)d/%(max)d ETA: %(eta)ds')
         for deck in test_decks:
             for bot in bot_list:
-                if ctr % (n // 5) == 0:
-                    print('{}/{}'.format(ctr, n))
                 ctr += 1
-                rmse += (trained_model.predict(bot, deck) - winrates[(bot, deck['deckName'])]) ** 2
+                rmse += (model_instance.predict(bot, deck) - winrates[(bot, deck['deckName'])]) ** 2
+                bar.message = '{:.3f}'.format(math.sqrt(rmse / ctr))
+                bar.next()
+        bar.finish()
         rmse = math.sqrt(rmse / n)
         print('RMSE:', rmse)
         avg_rmse += rmse

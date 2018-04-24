@@ -3,12 +3,13 @@ from typing import List
 
 from crossval import crossval
 from loader import bot_list, load_test_decks, load_training_decks, load_training_games
+from tester import test_model, generate_submission
 
 
 def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
-    if deck1['hero'] != deck2['hero']:
-        return 31
     distance = 30
+    if deck1['hero'] != deck2['hero']:
+        distance += 10
     for card in deck1['cards']:
         if card in deck2['cards']:
             distance -= min(deck1['cards'][card], deck2['cards'][card])
@@ -21,7 +22,7 @@ class KNN:
     training_decks = []
     training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
 
-    def __init__(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
+    def learn(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
         self.k = config['k']
         self.training_games = training_games
         self.training_decks = training_decks
@@ -45,11 +46,17 @@ class KNN:
         for deck in sorted(self.training_decks, key=lambda d: calculate_deck_distance(deck0, d)):
             if used_decks >= self.k:
                 break
+            dist = calculate_deck_distance(deck0, deck)
+            if dist >= 30:
+                continue
+            weight = (30 - dist) / 30
             r = player1_results[(bot0, deck['deckName'])]
             if r == (0, 0):
                 continue
-            results_sum = (results_sum[0] + r[0], results_sum[1] + r[1])
+            results_sum = (results_sum[0] + r[0] * weight, results_sum[1] + r[1] * weight)
             used_decks += 1
+        if sum(results_sum) == 0:
+            return 0.5
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
@@ -61,26 +68,6 @@ class KNN:
         return winrate * 100
 
 
-def knn_test() -> None:
-    print('Testing KNN with cross validation')
-    training_games = load_training_games()
-    training_decks = load_training_decks()
-    print('Cross validation score:', crossval(4, training_games, training_decks, KNN, {'k': 9}))
-
-
-def knn_solve() -> None:
-    print('Generating data/submission.csv')
-    training_games = load_training_games()
-    training_decks = load_training_decks()
-    test_decks = sorted(load_test_decks(), key=lambda d: d['deckName'])
-    knn = KNN(training_games, training_decks, {'k': 9})
-    with open('data/submission.csv', 'w') as f:
-        for bot in bot_list:
-            for deck in test_decks:
-                print(bot, deck['deckName'])
-                print('{};{};{}'.format(bot, deck['deckName'], knn.predict(bot, deck)), file=f)
-
-
 if __name__ == '__main__':
-    knn_test()
-    knn_solve()
+    test_model(KNN, {'k': 1000})
+    generate_submission(KNN, {'k': 1000})
