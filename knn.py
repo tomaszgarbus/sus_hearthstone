@@ -20,6 +20,7 @@ class KNN(BaseModel):
     training_games = []
     training_decks = []
     training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
+    training_winrates = {}
 
     def learn(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
         self.k = config['k']
@@ -34,6 +35,11 @@ class KNN(BaseModel):
                 wins = (wins[0], wins[1] + 1)
             self.training_results[player0][player1] = wins
             self.training_results[player1][player0] = (wins[1], wins[0])
+        for player0, results_dict in self.training_results.items():
+            results_sum = (0, 0)
+            for player1, results in results_dict.items():
+                results_sum = (results_sum[0] + results[0], results_sum[1] + results[1])
+            self.training_winrates[player0] = results_sum[0] / sum(results_sum)
 
     def predict_match_result(self, bot0: str, deck0: dict, bot1: str, deck1: dict) -> float:
         player1 = (bot1, deck1)
@@ -45,7 +51,7 @@ class KNN(BaseModel):
                 break
             dist = calculate_deck_distance(deck0, deck)
             if dist >= 30:
-                continue
+                break
             weight = (30 - dist) / 30
             r = player1_results[(bot0, deck['deckName'])]
             if r == (0, 0):
@@ -57,15 +63,23 @@ class KNN(BaseModel):
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot: str, deck: Dict) -> float:
-        winrate = 0
-        for player in self.training_results:
-            winrate += self.predict_match_result(bot, deck, player[0], player[1])
-        winrate /= len(self.training_results)
-        print(winrate)
-        return winrate * 100
+    def predict(self, bot: str, deck: dict) -> float:
+        winrate, weights = 0, 0
+        used_decks = 0
+        for deck1 in sorted(self.training_decks, key=lambda d: calculate_deck_distance(deck, d)):
+            if used_decks >= self.k:
+                break
+            dist = calculate_deck_distance(deck, deck1)
+            if dist >= 30:
+                break
+            weight = (30 - dist) / 30
+            wr = self.training_winrates[(bot, deck1['deckName'])]
+            winrate += wr * weight
+            weights += weight
+            used_decks += 1
+        return 100 * winrate / weights
 
 
 if __name__ == '__main__':
     test_model(KNN, {'k': 1000})
-    # generate_submission(KNN, {'k': 1000})
+    generate_submission(KNN, {'k': 1000})
