@@ -1,13 +1,14 @@
 import math
 import random
 from collections import defaultdict
-from progress.bar import Bar
-from typing import List
+from progress.bar import IncrementalBar
 
+from base_model import *
 from loader import bot_list
 
 
-def crossval(folds: int, games: List[dict], decks: List[dict], model, model_config: dict):
+def crossval(folds: int, games: List[Game], decks: List[Deck], model: Type[BaseModel],
+             model_config: ModelConfig) -> float:
     random.shuffle(decks)
     fold_decks = len(decks) // folds
     wins = defaultdict(lambda: (0, 0))
@@ -26,7 +27,6 @@ def crossval(folds: int, games: List[dict], decks: List[dict], model, model_conf
         winrates[player] = 100 * wr[0] / wr[1]
     avg_rmse = 0
     for i in range(folds):
-        print('Fold {}/{}'.format(i + 1, folds))
         test_decks = decks[i*fold_decks:(i+1)*fold_decks]
         training_decks = decks[:i*fold_decks] + decks[(i+1)*fold_decks:]
         training_deck_names = [d['deckName'] for d in training_decks]
@@ -37,16 +37,15 @@ def crossval(folds: int, games: List[dict], decks: List[dict], model, model_conf
         rmse = 0.0
         ctr = 0
         n = len(test_decks) * len(bot_list)
-        bar = Bar('', max=n, suffix='%(index)d/%(max)d ETA: %(eta)ds')
+        bar = IncrementalBar('', max=n, suffix='%(index)d/%(max)d ETA: %(eta)ds')
         for deck in test_decks:
             for bot in bot_list:
                 ctr += 1
                 rmse += (model_instance.predict(bot, deck) - winrates[(bot, deck['deckName'])]) ** 2
-                bar.message = '{:.3f}'.format(math.sqrt(rmse / ctr))
+                bar.message = '{}/{} | {:.5f}'.format(i + 1, folds, math.sqrt(rmse / ctr))
                 bar.next()
         bar.finish()
         rmse = math.sqrt(rmse / n)
-        print('RMSE:', rmse)
         avg_rmse += rmse
     avg_rmse /= folds
     return avg_rmse

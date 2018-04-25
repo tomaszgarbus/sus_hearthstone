@@ -1,7 +1,7 @@
-from typing import List, Dict, Callable
 import numpy as np
 
-from loader import load_training_decks, load_test_decks, all_card_names, map_decks_by_name
+from base_model import *
+from loader import LoadedData, all_card_names, map_decks_by_name
 
 """
     DECK FORMAT: {
@@ -46,11 +46,11 @@ class InputBuilder:
     decks = None
 
     def __init__(self):
-        self.all_cards = all_card_names(load_test_decks() + load_training_decks())
+        self.all_cards = all_card_names(LoadedData.test_decks + LoadedData.training_decks)
         self.distinct_cards = len(self.all_cards)
-        self.decks = map_decks_by_name(load_training_decks() + load_test_decks())
+        self.decks = map_decks_by_name(LoadedData.training_decks + LoadedData.test_decks)
 
-    def _one_hot(self, val:int, N:int) -> np.ndarray:
+    def _one_hot(self, val: int, N: int) -> np.ndarray:
         assert 0 <= val < N
         ret = np.zeros((N,), dtype='float32')
         ret[val] = 1.

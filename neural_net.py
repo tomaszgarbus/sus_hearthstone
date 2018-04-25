@@ -1,11 +1,10 @@
-from typing import List, Dict
-import tensorflow as tf
-from math import sqrt
 import numpy as np
-from random import sample
+import tensorflow as tf
 from collections import defaultdict
+from math import sqrt
+from random import sample
 
-from base_model import BaseModel
+from base_model import *
 from input_builder import InputBuilder
 from tester import test_model, generate_submission
 
@@ -19,7 +18,7 @@ class NeuralNet(BaseModel):
     # Each |lr_decay_time| epochs the learning rate is divided by two
     lr_decay_time = 10000
 
-    def _create_model(self):
+    def _create_model(self) -> None:
         self.x = tf.placeholder(tf.float32, [None, 722])
         self.y = tf.placeholder(tf.float32, [None, 1])
 
@@ -50,7 +49,7 @@ class NeuralNet(BaseModel):
         self._input_builder = InputBuilder()
         self._create_model()
 
-    def _set_config(self, config: Dict) -> None:
+    def _set_config(self, config: ModelConfig) -> None:
         if 'layers' in config:
             self._layers = config['layers']
         if 'lr' in config:
@@ -62,8 +61,7 @@ class NeuralNet(BaseModel):
         if 'lr_decay_time' in config:
             self.lr_decay_time = config['lr_decay_time']
 
-
-    def learn(self, training_games: List[Dict], training_decks: List[Dict], config: Dict) -> None:
+    def learn(self, training_games: List[Game], training_decks: List[Deck], config: ModelConfig = None) -> None:
         self._set_config(config)
 
         self.games = []
@@ -123,7 +121,7 @@ class NeuralNet(BaseModel):
                 self.learning_rate /= 2
         pass
 
-    def predict_match_result(self, bot0: str, deck0: Dict, bot1: str, deck1: str) -> float:
+    def predict_match_result(self, bot0: str, deck0: Deck, bot1: str, deck1: DeckName) -> float:
         game_input = self._input_builder.build_game_input(game={
             'bot0': bot0,
             'bot1': bot1,
@@ -135,13 +133,14 @@ class NeuralNet(BaseModel):
         return 1-pred
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot: str, deck: Dict) -> float:
+    def predict(self, bot: str, deck: Deck) -> float:
         winrate = 0
         for player in self.training_results:
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
         winrate /= len(self.training_results)
         return winrate * 100
 
+
 if __name__ == '__main__':
     test_model(NeuralNet)
-    #generate_submission(NeuralNet, {})
+    generate_submission(NeuralNet, {})

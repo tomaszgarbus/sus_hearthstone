@@ -1,23 +1,23 @@
 from collections import defaultdict
 
-from loader import load_training_decks, load_training_games, all_hero_types
+from base_model import *
+from loader import LoadedData, all_hero_types
 
 
-def print_counter(ctr: dict) -> None:
+def print_counter(ctr: Dict[Any, int]) -> None:
     print('count', len(ctr))
     print('min', min(ctr.items(), key=lambda x: x[1]))
     print('max', max(ctr.items(), key=lambda x: x[1]))
 
 
 if __name__ == '__main__':
-    print('example deck', load_training_decks()[0])
-    training_games = load_training_games()
-    print('example game', training_games[0])
-    print(all_hero_types(load_training_decks()))
+    print('example deck', LoadedData.training_decks[0])
+    print('example game', LoadedData.training_games[0])
+    print(all_hero_types(LoadedData.training_decks))
     bot_counter = defaultdict(lambda: 0)
     deck_counter = defaultdict(lambda: 0)
     pair_counter = defaultdict(lambda: 0)
-    for game in training_games:
+    for game in LoadedData.training_games:
         bot_counter[game['bot0']] += 1
         bot_counter[game['bot1']] += 1
         deck_counter[game['deck0']] += 1

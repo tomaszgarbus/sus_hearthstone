@@ -1,11 +1,10 @@
 from collections import defaultdict
-from typing import List, Dict
 
-from base_model import BaseModel
+from base_model import *
 from tester import generate_submission, test_model
 
 
-def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
+def calculate_deck_distance(deck1: Deck, deck2: Deck) -> int:
     distance = 30
     if deck1['hero'] != deck2['hero']:
         distance += 10
@@ -22,10 +21,12 @@ class KNN(BaseModel):
     training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
     training_winrates = {}
 
-    def learn(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
+    def learn(self, training_games: List[Game], training_decks: List[Deck], config: ModelConfig = None) -> None:
         self.k = config['k']
         self.training_games = training_games
         self.training_decks = training_decks
+        self.training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
+        self.training_winrates = {}
         for game in training_games:
             player0, player1 = (game['bot0'], game['deck0']), (game['bot1'], (game['deck1']))
             wins = self.training_results[player0][player1]
@@ -41,7 +42,7 @@ class KNN(BaseModel):
                 results_sum = (results_sum[0] + results[0], results_sum[1] + results[1])
             self.training_winrates[player0] = results_sum[0] / sum(results_sum)
 
-    def predict_match_result(self, bot0: str, deck0: dict, bot1: str, deck1: dict) -> float:
+    def predict_match_result(self, bot0: str, deck0: Deck, bot1: str, deck1: DeckName) -> float:
         player1 = (bot1, deck1)
         player1_results = self.training_results[player1]
         results_sum = (0, 0)
@@ -63,7 +64,7 @@ class KNN(BaseModel):
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot: str, deck: dict) -> float:
+    def predict(self, bot: str, deck: Deck) -> float:
         winrate, weights = 0, 0
         used_decks = 0
         for deck1 in sorted(self.training_decks, key=lambda d: calculate_deck_distance(deck, d)):
@@ -77,9 +78,18 @@ class KNN(BaseModel):
             winrate += wr * weight
             weights += weight
             used_decks += 1
+        if weights == 0:
+            print('Warning: weights == 0')
+            return 50.0
         return 100 * winrate / weights
 
 
 if __name__ == '__main__':
-    test_model(KNN, {'k': 1000})
-    generate_submission(KNN, {'k': 1000})
+    best_k, best_result = -1, 1000
+    for k in list(range(1, 21)) + [1000]:
+        print('k =', k)
+        result = test_model(KNN, {'k': k})
+        if result < best_result:
+            best_k, best_result = k, result
+    print('Best', best_k, best_result)
+    generate_submission(KNN, {'k': best_k})

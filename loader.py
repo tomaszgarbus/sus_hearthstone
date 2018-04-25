@@ -1,6 +1,8 @@
 import csv
 import json
-from typing import Dict, List
+
+from base_model import *
+
 
 bot_list = ['A1', 'A2', 'B1', 'B2']
 
@@ -13,7 +15,7 @@ def remove_one_element_lists(d: dict) -> None:
             remove_one_element_lists(d[key])
 
 
-def load_decks(filename: str) -> List[dict]:
+def load_decks(filename: str) -> List[Deck]:
     decks = []
     with open(filename) as file:
         lines = file.read().strip().split('\n')
@@ -24,15 +26,15 @@ def load_decks(filename: str) -> List[dict]:
     return decks
 
 
-def load_training_decks() -> List[dict]:
+def load_training_decks() -> List[Deck]:
     return load_decks('data/trainingDecks.json')
 
 
-def load_test_decks() -> List[dict]:
+def load_test_decks() -> List[Deck]:
     return load_decks('data/testDecks.json')
 
 
-def load_training_games() -> List[dict]:
+def load_training_games() -> List[Game]:
     with open('data/training_games.csv') as file:
         reader = csv.reader(file, delimiter=';')
         games = []
@@ -46,14 +48,14 @@ def load_training_games() -> List[dict]:
     return games
 
 
-def map_decks_by_name(decks: List[dict]) -> dict:
+def map_decks_by_name(decks: List[Deck]) -> Dict[DeckName, Deck]:
     decks_dict = {}
     for deck in decks:
         decks_dict[deck['deckName']] = deck
     return decks_dict
 
 
-def all_card_names(decks: List[dict]) -> Dict[str, int]:
+def all_card_names(decks: List[Deck]) -> Dict[str, int]:
     all_names = {}
     for deck in decks:
         for card_name in deck['cards']:
@@ -64,7 +66,7 @@ def all_card_names(decks: List[dict]) -> Dict[str, int]:
     return all_names
 
 
-def all_hero_types(decks: List[dict]) -> Dict[str, int]:
+def all_hero_types(decks: List[Deck]) -> Dict[str, int]:
     all_heroes = {}
     for deck in decks:
         if deck['hero'] in all_heroes:
@@ -72,3 +74,9 @@ def all_hero_types(decks: List[dict]) -> Dict[str, int]:
         else:
             all_heroes[deck['hero']] = len(all_heroes)
     return all_heroes
+
+
+class LoadedData:
+    training_games = load_training_games()
+    training_decks = load_training_decks()
+    test_decks = load_test_decks()
