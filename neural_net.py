@@ -11,13 +11,13 @@ from tester import test_model, generate_submission
 
 
 class NeuralNet(BaseModel):
-    _layers = [200, 1600, 1]
+    _layers = [1]
     _input_builder = None
     learning_rate = 0.2
     mb_size = 256
     nb_epochs = 100000
     # Each |lr_decay_time| epochs the learning rate is divided by two
-    lr_decay_time = 10000
+    lr_decay_time = 20000
 
     def _create_model(self):
         self.x = tf.placeholder(tf.float32, [None, 722])
@@ -50,7 +50,22 @@ class NeuralNet(BaseModel):
         self._input_builder = InputBuilder()
         self._create_model()
 
+    def _set_config(self, config: Dict) -> None:
+        if 'layers' in config:
+            self._layers = config['layers']
+        if 'lr' in config:
+            self.learning_rate = config['lr']
+        if 'mb_size' in config:
+            self.mb_size = config['mb_size']
+        if 'nb_epochs' in config:
+            self.nb_epochs = config['nb_epochs']
+        if 'lr_decay_time' in config:
+            self.lr_decay_time = config['lr_decay_time']
+
+
     def learn(self, training_games: List[Dict], training_decks: List[Dict], config: Dict) -> None:
+        self._set_config(config)
+
         self.games = []
         self.winners = []
         for training_game in training_games:
@@ -63,7 +78,7 @@ class NeuralNet(BaseModel):
         print(self.games.shape)
         print(self.winners.shape)
 
-        # Whatevs
+        # Copied from KNN
         self.training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
         self.training_games = training_games
         self.training_decks = training_decks
@@ -82,15 +97,6 @@ class NeuralNet(BaseModel):
         tf.global_variables_initializer().run(session=self.sess)
 
         for epoch_no in range(self.nb_epochs):
-            #batch_beg = epoch_no * self.mb_size
-            #batch_end = (epoch_no+1) * self.mb_size
-            #batch_beg %= len(self.games)
-            #batch_end %= len(self.games)
-            #if batch_beg < batch_end:
-            #    batch = list(range(batch_beg, batch_end))
-            #else:
-            #    batch = list(range(batch_beg, len(self.games))) + list(range(batch_end))
-            #print(batch)
             batch = sample(range(len(self.games)), k=self.mb_size)
             batch_x = self.games[batch]
             batch_y = self.winners[batch]
@@ -125,5 +131,5 @@ class NeuralNet(BaseModel):
         return winrate * 100
 
 if __name__ == '__main__':
-    test_model(NeuralNet)
-    #generate_submission(NeuralNet, {})
+    #test_model(NeuralNet)
+    generate_submission(NeuralNet, {})
