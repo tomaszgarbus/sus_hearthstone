@@ -29,7 +29,7 @@ def crossval(folds: int, games: List[Game], decks: List[Deck], model: Type[BaseM
     for i in range(folds):
         test_decks = decks[i*fold_decks:(i+1)*fold_decks]
         training_decks = decks[:i*fold_decks] + decks[(i+1)*fold_decks:]
-        training_deck_names = [d['deckName'] for d in training_decks]
+        training_deck_names = set([d['deckName'] for d in training_decks])
         training_games = list(filter(
             lambda g: g['deck0'] in training_deck_names and g['deck1'] in training_deck_names, games))
         model_instance = model()
