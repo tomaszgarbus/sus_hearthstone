@@ -15,9 +15,9 @@ class NeuralNet(BaseModel):
     _input_builder = None
     learning_rate = 0.2
     mb_size = 256
-    nb_epochs = 100000
+    nb_epochs = 20000
     # Each |lr_decay_time| epochs the learning rate is divided by two
-    lr_decay_time = 20000
+    lr_decay_time = 10000
 
     def _create_model(self):
         self.x = tf.placeholder(tf.float32, [None, 722])
@@ -40,7 +40,7 @@ class NeuralNet(BaseModel):
 
         signal = last_dense_layer
         self.preds = signal
-        self.loss = tf.losses.mean_squared_error(self.y, signal)
+        self.loss = tf.losses.log_loss(self.y, signal)
         self.accuracy = tf.reduce_mean(
             tf.cast(tf.equal(tf.round(signal), self.y), tf.float32))
 
@@ -73,6 +73,18 @@ class NeuralNet(BaseModel):
             self.games.append(input_features)
             winner = [training_game['winner']]
             self.winners.append(winner)
+
+            reversed_game = {
+                'bot0': training_game['bot1'],
+                'bot1': training_game['bot0'],
+                'deck0': training_game['deck1'],
+                'deck1': training_game['deck0'],
+                'winner': 1-training_game['winner']
+            }
+            input_features = self._input_builder.build_game_input(reversed_game)
+            self.games.append(input_features)
+            winner = [reversed_game['winner']]
+            self.winners.append(winner)
         self.games = np.array(self.games)
         self.winners = np.array(self.winners)
         print(self.games.shape)
@@ -82,7 +94,7 @@ class NeuralNet(BaseModel):
         self.training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
         self.training_games = training_games
         self.training_decks = training_decks
-        for game in training_games:
+        for game in self.training_games:
             player0, player1 = (game['bot0'], game['deck0']), (game['bot1'], (game['deck1']))
             wins = self.training_results[player0][player1]
             if game['winner'] == 0:
@@ -131,5 +143,5 @@ class NeuralNet(BaseModel):
         return winrate * 100
 
 if __name__ == '__main__':
-    #test_model(NeuralNet)
-    generate_submission(NeuralNet, {})
+    test_model(NeuralNet)
+    #generate_submission(NeuralNet, {})
