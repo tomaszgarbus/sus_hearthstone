@@ -58,7 +58,7 @@ class InputBuilder:
 
     def build_single_player_input(self,
                                   deck: Dict,
-                                  bot) -> np.ndarray:
+                                  bot: str) -> np.ndarray:
         features = []
 
         # Append bot
