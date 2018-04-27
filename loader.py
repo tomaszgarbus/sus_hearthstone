@@ -1,13 +1,8 @@
 import csv
 import json
-<<<<<<< HEAD
 import os
-from typing import Dict, List
-=======
 
 from base_model import *
-
->>>>>>> d9f45f887d5b4e91a5dea13305853060fc7f929c
 
 bot_list = ['A1', 'A2', 'B1', 'B2']
 
