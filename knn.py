@@ -1,12 +1,10 @@
 from collections import defaultdict
-from typing import List
 
-from crossval import crossval
-from loader import bot_list, load_test_decks, load_training_decks, load_training_games
-from tester import test_model, generate_submission
+from base_model import *
+from tester import generate_submission, test_model
 
 
-def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
+def calculate_deck_distance(deck1: Deck, deck2: Deck) -> int:
     distance = 30
     if deck1['hero'] != deck2['hero']:
         distance += 10
@@ -16,16 +14,19 @@ def calculate_deck_distance(deck1: dict, deck2: dict) -> int:
     return distance
 
 
-class KNN:
+class KNN(BaseModel):
     k = 1
     training_games = []
     training_decks = []
     training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
+    training_winrates = {}
 
-    def learn(self, training_games: List[dict], training_decks: List[dict], config: dict) -> None:
+    def learn(self, training_games: List[Game], training_decks: List[Deck], config: ModelConfig = None) -> None:
         self.k = config['k']
         self.training_games = training_games
         self.training_decks = training_decks
+        self.training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
+        self.training_winrates = {}
         for game in training_games:
             player0, player1 = (game['bot0'], game['deck0']), (game['bot1'], (game['deck1']))
             wins = self.training_results[player0][player1]
@@ -35,10 +36,13 @@ class KNN:
                 wins = (wins[0], wins[1] + 1)
             self.training_results[player0][player1] = wins
             self.training_results[player1][player0] = (wins[1], wins[0])
+        for player0, results_dict in self.training_results.items():
+            results_sum = (0, 0)
+            for player1, results in results_dict.items():
+                results_sum = (results_sum[0] + results[0], results_sum[1] + results[1])
+            self.training_winrates[player0] = results_sum[0] / sum(results_sum)
 
-    # deck1 must be a deck from the training set
-    # return the probability of deck0 winning the game
-    def predict_match_result(self, bot0: str, deck0: dict, bot1: str, deck1: dict) -> float:
+    def predict_match_result(self, bot0: str, deck0: Deck, bot1: str, deck1: DeckName) -> float:
         player1 = (bot1, deck1)
         player1_results = self.training_results[player1]
         results_sum = (0, 0)
@@ -48,7 +52,7 @@ class KNN:
                 break
             dist = calculate_deck_distance(deck0, deck)
             if dist >= 30:
-                continue
+                break
             weight = (30 - dist) / 30
             r = player1_results[(bot0, deck['deckName'])]
             if r == (0, 0):
@@ -60,14 +64,32 @@ class KNN:
         return results_sum[1] / sum(results_sum)
 
     # returns the predicted winrate of (bot, deck) vs all (bot, deck) pairs in the training set
-    def predict(self, bot: str, deck: dict) -> float:
-        winrate = 0
-        for player in self.training_results:
-            winrate += self.predict_match_result(bot, deck, player[0], player[1])
-        winrate /= len(self.training_results)
-        return winrate * 100
+    def predict(self, bot: str, deck: Deck) -> float:
+        winrate, weights = 0, 0
+        used_decks = 0
+        for deck1 in sorted(self.training_decks, key=lambda d: calculate_deck_distance(deck, d)):
+            if used_decks >= self.k:
+                break
+            dist = calculate_deck_distance(deck, deck1)
+            if dist >= 30:
+                break
+            weight = (30 - dist) / 30
+            wr = self.training_winrates[(bot, deck1['deckName'])]
+            winrate += wr * weight
+            weights += weight
+            used_decks += 1
+        if weights == 0:
+            print('Warning: weights == 0')
+            return 50.0
+        return 100 * winrate / weights
 
 
 if __name__ == '__main__':
-    # test_model(KNN, {'k': 1000})
-    generate_submission(KNN, {'k': 1000})
+    best_k, best_result = -1, 1000
+    for k in list(range(1, 21)) + [1000]:
+        print('k =', k)
+        result = test_model(KNN, {'k': k})
+        if result < best_result:
+            best_k, best_result = k, result
+    print('Best', best_k, best_result)
+    generate_submission(KNN, {'k': best_k})
