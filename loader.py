@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 from typing import Dict, List
 
 bot_list = ['A1', 'A2', 'B1', 'B2']
@@ -33,16 +34,21 @@ def load_test_decks() -> List[dict]:
 
 
 def load_training_games() -> List[dict]:
-    with open('data/training_games.csv') as file:
-        reader = csv.reader(file, delimiter=';')
-        games = []
-        field_names = ['id', 'bot0', 'deck0', 'bot1', 'deck1', 'winner']
-        for line in reader:
-            game = {}
-            for name, value in zip(field_names, line):
-                game[name] = value
-            game['winner'] = int(game['winner'][7])
-            games.append(game)
+    if os.path.isfile('data/training_games_detailed.json'):
+        with open('data/training_games_detailed.json') as file:
+            games = json.load(file)
+    else:
+        print('Warning: data/training_games_detailed.json doesn\'t exist, loading from data/training_games.csv')
+        with open('data/training_games.csv') as file:
+            reader = csv.reader(file, delimiter=';')
+            games = []
+            field_names = ['id', 'bot0', 'deck0', 'bot1', 'deck1', 'winner']
+            for line in reader:
+                game = {}
+                for name, value in zip(field_names, line):
+                    game[name] = value
+                game['winner'] = int(game['winner'][7])
+                games.append(game)
     return games
 
 
