@@ -2,6 +2,7 @@ import numpy as np
 
 from base_model import *
 from loader import LoadedData, all_card_names, map_decks_by_name
+from cards_enhancer import CardsEnhancer
 
 """
     DECK FORMAT: {
@@ -42,6 +43,7 @@ class InputBuilder:
 
     all_cards = None  # :Dict[str, int], maps card name to unique id
     distinct_cards = 0
+    cards_enhancer = CardsEnhancer()
 
     decks = None
 
@@ -74,6 +76,13 @@ class InputBuilder:
             cards_counts[self.all_cards[card]] = count
         features.append(cards_counts)
 
+        # Append attack
+        cards_attacks = np.zeros(self.distinct_cards, dtype=np.float32)
+        for card in deck['cards']:
+            enhanced = self.cards_enhancer.get_card(card)
+            count = deck['cards'][card]
+            cards_attacks[self.all_cards[card]] = count * enhanced['attack']
+        features.append(cards_attacks)
         # TODO: add support for cards_cardinality_funs1 and cards_cardinlity_funs2
 
         return np.concatenate(features)

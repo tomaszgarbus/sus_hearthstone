@@ -10,7 +10,7 @@ from tester import test_model, generate_submission
 
 
 class NeuralNet(BaseModel):
-    _layers = [128, 1]
+    _layers = [1]
     _input_builder = None
     learning_rate = 0.2
     mb_size = 256
@@ -66,6 +66,7 @@ class NeuralNet(BaseModel):
             self.lr_decay_time = config['lr_decay_time']
 
     def learn(self, training_games: List[Game], training_decks: List[Deck], config: ModelConfig = None) -> None:
+        print(training_games)
         self._set_config(config)
 
         self.games = []
@@ -146,5 +147,5 @@ class NeuralNet(BaseModel):
 
 
 if __name__ == '__main__':
-    #test_model(NeuralNet)
-    generate_submission(NeuralNet, {})
+    test_model(NeuralNet)
+    #generate_submission(NeuralNet, {})
