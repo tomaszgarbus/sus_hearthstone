@@ -1,8 +1,5 @@
-<<<<<<< HEAD
-=======
 """ Like neural net but considers final HP of the winner """
 
->>>>>>> 40763cef5695cfd3f291f8f0ba50853df47275cc
 import numpy as np
 import tensorflow as tf
 from collections import defaultdict
