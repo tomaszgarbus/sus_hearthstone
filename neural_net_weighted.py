@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+""" Like neural net but considers final HP of the winner """
+
+>>>>>>> 40763cef5695cfd3f291f8f0ba50853df47275cc
 import numpy as np
 import tensorflow as tf
 from collections import defaultdict
@@ -47,6 +52,7 @@ class NeuralNet(BaseModel):
         self.accuracy = tf.reduce_mean(
             tf.cast(tf.equal(tf.round(signal), tf.round(self.y)), tf.float32))
 
+
         self.op_train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.loss)
 
     def __init__(self):
@@ -70,11 +76,12 @@ class NeuralNet(BaseModel):
 
         self.games = []
         self.winners = []
+
         def extract_winner(game):
             if game['winner'] == 0:
-                return [0.9 + game['winner_hp']/300]
+                return [0.75 + game['winner_hp']/120]
             else:
-                return [0.1 - game['winner_hp']/300]
+                return [0.25 - game['winner_hp']/120]
 
         for training_game in training_games:
             input_features = self._input_builder.build_game_input(training_game)
@@ -98,6 +105,8 @@ class NeuralNet(BaseModel):
         self.winners = np.array(self.winners)
         print(self.games.shape)
         print(self.winners.shape)
+        print(self.winners)
+
 
         # Copied from KNN
         self.training_results = defaultdict(lambda: defaultdict(lambda: (0, 0)))
