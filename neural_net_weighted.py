@@ -10,6 +10,7 @@ from base_model import *
 from input_builder import InputBuilder
 from tester import test_model, generate_submission
 
+INPUT_SHAPE = 722
 
 class NeuralNet(BaseModel):
     _layers = [1]
@@ -22,7 +23,7 @@ class NeuralNet(BaseModel):
     lr_decay_time = 1000
 
     def _create_model(self) -> None:
-        self.x = tf.placeholder(tf.float32, [None, 722])
+        self.x = tf.placeholder(tf.float32, [None, INPUT_SHAPE])
         self.y = tf.placeholder(tf.float32, [None, 1])
 
         signal = self.x
@@ -39,8 +40,10 @@ class NeuralNet(BaseModel):
             # Apply dropout
             signal = tf.layers.dropout(inputs=signal, rate=self.dropout)
 
+        #w_init = tf.initializers.random_normal(mean=0.5)
         last_dense_layer = tf.layers.dense(inputs=signal,
                                            activation=tf.nn.sigmoid,
+         #                                  kernel_initializer=w_init,
                                            units=1)
 
         signal = last_dense_layer
@@ -81,7 +84,7 @@ class NeuralNet(BaseModel):
                 return [0.25 - game['winner_hp']/120]
 
         for training_game in training_games:
-            input_features = self._input_builder.build_game_input(training_game)
+            input_features = self._input_builder.build_game_input(training_game).reshape((INPUT_SHAPE))
             self.games.append(input_features)
             winner = extract_winner(training_game)
             self.winners.append(winner)
@@ -94,7 +97,7 @@ class NeuralNet(BaseModel):
                 'winner': 1-training_game['winner'],
                 'winner_hp': 1 - training_game['winner_hp']
             }
-            input_features = self._input_builder.build_game_input(reversed_game)
+            input_features = self._input_builder.build_game_input(reversed_game).reshape((INPUT_SHAPE))
             self.games.append(input_features)
             winner = extract_winner(reversed_game)
             self.winners.append(winner)
@@ -145,7 +148,7 @@ class NeuralNet(BaseModel):
             'deck0': deck0['deckName'],
             'deck1': deck1
         })
-        game_input = game_input.reshape((1, 722))
+        game_input = game_input.reshape((1, INPUT_SHAPE))
         pred = self.sess.run([self.preds], feed_dict={self.x: game_input})[0][0][0]
         return pred
 
@@ -155,7 +158,7 @@ class NeuralNet(BaseModel):
         for player in self.training_results:
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
         winrate /= len(self.training_results)
-        #print(winrate)
+        print(winrate)
         return winrate * 100
 
 

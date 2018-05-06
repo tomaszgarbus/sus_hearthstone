@@ -9,18 +9,20 @@ from input_builder import InputBuilder
 from tester import test_model, generate_submission
 
 
+INPUT_SHAPE = 1418 + 696 + 696
+
 class NeuralNet(BaseModel):
     _layers = [1]
     _input_builder = None
-    learning_rate = 0.2
+    learning_rate = 0.0002
     mb_size = 256
-    nb_epochs = 40000
-    dropout = 0.5
+    nb_epochs = 5000
+    dropout = 0.0
     # Each |lr_decay_time| epochs the learning rate is divided by two
-    lr_decay_time = 10000
+    lr_decay_time = 1000
 
     def _create_model(self) -> None:
-        self.x = tf.placeholder(tf.float32, [None, 722])
+        self.x = tf.placeholder(tf.float32, [None, INPUT_SHAPE])
         self.y = tf.placeholder(tf.float32, [None, 1])
 
         signal = self.x
@@ -38,7 +40,6 @@ class NeuralNet(BaseModel):
             signal = tf.layers.dropout(inputs=signal, rate=self.dropout)
 
         last_dense_layer = tf.layers.dense(inputs=signal,
-                                           activation=tf.nn.sigmoid,
                                            units=1)
 
         signal = last_dense_layer
@@ -66,14 +67,12 @@ class NeuralNet(BaseModel):
             self.lr_decay_time = config['lr_decay_time']
 
     def learn(self, training_games: List[Game], training_decks: List[Deck], config: ModelConfig = None) -> None:
-        print(training_games)
         self._set_config(config)
 
         self.games = []
         self.winners = []
         for training_game in training_games:
-            input_features = self._input_builder.build_game_input(training_game)
-            self.games.append(input_features)
+            self.games.append(training_game)
             winner = [training_game['winner']]
             self.winners.append(winner)
 
@@ -84,12 +83,12 @@ class NeuralNet(BaseModel):
                 'deck1': training_game['deck0'],
                 'winner': 1-training_game['winner']
             }
-            input_features = self._input_builder.build_game_input(reversed_game)
-            self.games.append(input_features)
+            self.games.append(reversed_game)
             winner = [reversed_game['winner']]
             self.winners.append(winner)
         self.games = np.array(self.games)
         self.winners = np.array(self.winners)
+
         print(self.games.shape)
         print(self.winners.shape)
 
@@ -114,6 +113,8 @@ class NeuralNet(BaseModel):
         for epoch_no in range(self.nb_epochs):
             batch = sample(range(len(self.games)), k=self.mb_size)
             batch_x = self.games[batch]
+            batch_x = list(map(self._input_builder.build_game_input, batch_x))
+            batch_x = np.concatenate(batch_x, axis=0)
             batch_y = self.winners[batch]
             loss, acc, _, preds = self.sess.run([self.loss, self.accuracy, self.op_train, self.preds], feed_dict={
                 self.x: batch_x,
@@ -133,7 +134,6 @@ class NeuralNet(BaseModel):
             'deck0': deck0['deckName'],
             'deck1': deck1
         })
-        game_input = game_input.reshape((1, 722))
         pred = self.sess.run([self.preds], feed_dict={self.x: game_input})[0][0][0]
         return 1-pred
 
@@ -143,7 +143,8 @@ class NeuralNet(BaseModel):
         for player in self.training_results:
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
         winrate /= len(self.training_results)
-        return winrate * 100
+        print(winrate)
+        return max(20, min(80, winrate * 100))
 
 
 if __name__ == '__main__':

@@ -77,15 +77,32 @@ class InputBuilder:
         features.append(cards_counts)
 
         # Append attack
-        cards_attacks = np.zeros(self.distinct_cards, dtype=np.float32)
-        for card in deck['cards']:
-            enhanced = self.cards_enhancer.get_card(card)
-            count = deck['cards'][card]
-            cards_attacks[self.all_cards[card]] = count * enhanced['attack']
-        features.append(cards_attacks)
-        # TODO: add support for cards_cardinality_funs1 and cards_cardinlity_funs2
+        # cards_attacks = np.zeros(self.distinct_cards, dtype=np.float32)
+        # for card in deck['cards']:
+        #     enhanced = self.cards_enhancer.get_card(card)
+        #     count = deck['cards'][card]
+        #     cards_attacks[self.all_cards[card]] = count * enhanced['attack']
+        # features.append(cards_attacks)
+        #
+        # # Append health
+        # cards_healths = np.zeros(self.distinct_cards, dtype=np.float32)
+        # for card in deck['cards']:
+        #     enhanced = self.cards_enhancer.get_card(card)
+        #     count = deck['cards'][card]
+        #     cards_healths[self.all_cards[card]] = count * enhanced['health']
+        # features.append(cards_healths)
+        #
+        # # Append cost
+        # cards_costs = np.zeros(self.distinct_cards, dtype=np.float32)
+        # for card in deck['cards']:
+        #     enhanced = self.cards_enhancer.get_card(card)
+        #     count = deck['cards'][card]
+        #     cards_costs[self.all_cards[card]] = count * enhanced['cost']
+        # features.append(cards_costs)
 
-        return np.concatenate(features)
+        features = np.concatenate(features)
+        features = features.reshape((1, features.shape[0]))
+        return features
 
     def build_game_input(self,
                          game: Dict) -> np.ndarray:
@@ -96,4 +113,5 @@ class InputBuilder:
         input_player1 = self.build_single_player_input(deck0, bot0)
         input_player2 = self.build_single_player_input(deck1, bot1)
 
-        return np.concatenate([input_player1, input_player2])
+        features = np.concatenate([input_player1, input_player2], axis=1)
+        return features
