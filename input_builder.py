@@ -101,7 +101,6 @@ class InputBuilder:
         # features.append(cards_costs)
 
         features = np.concatenate(features)
-        features = features.reshape((1, features.shape[0]))
         return features
 
     def build_game_input(self,
@@ -113,5 +112,5 @@ class InputBuilder:
         input_player1 = self.build_single_player_input(deck0, bot0)
         input_player2 = self.build_single_player_input(deck1, bot1)
 
-        features = np.concatenate([input_player1, input_player2], axis=1)
+        features = np.concatenate([input_player1, input_player2])
         return features
