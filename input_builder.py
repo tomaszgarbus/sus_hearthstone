@@ -77,28 +77,37 @@ class InputBuilder:
         features.append(cards_counts)
 
         # Append attack
-        # cards_attacks = np.zeros(self.distinct_cards, dtype=np.float32)
-        # for card in deck['cards']:
-        #     enhanced = self.cards_enhancer.get_card(card)
-        #     count = deck['cards'][card]
-        #     cards_attacks[self.all_cards[card]] = count * enhanced['attack']
-        # features.append(cards_attacks)
-        #
-        # # Append health
-        # cards_healths = np.zeros(self.distinct_cards, dtype=np.float32)
-        # for card in deck['cards']:
-        #     enhanced = self.cards_enhancer.get_card(card)
-        #     count = deck['cards'][card]
-        #     cards_healths[self.all_cards[card]] = count * enhanced['health']
-        # features.append(cards_healths)
-        #
-        # # Append cost
-        # cards_costs = np.zeros(self.distinct_cards, dtype=np.float32)
-        # for card in deck['cards']:
-        #     enhanced = self.cards_enhancer.get_card(card)
-        #     count = deck['cards'][card]
-        #     cards_costs[self.all_cards[card]] = count * enhanced['cost']
-        # features.append(cards_costs)
+        cards_attacks = []
+        for card in deck['cards']:
+            enhanced = self.cards_enhancer.get_card(card)
+            count = deck['cards'][card]
+            for k in range(count):
+                cards_attacks.append(enhanced['attack'] / 10)
+        cards_attacks = np.array(cards_attacks)
+        np.sort(cards_attacks)
+        features.append(cards_attacks)
+
+        # Append health
+        cards_healths = []
+        for card in deck['cards']:
+            enhanced = self.cards_enhancer.get_card(card)
+            count = deck['cards'][card]
+            for k in range(count):
+                cards_healths.append(enhanced['health'] / 10)
+        cards_healths = np.array(cards_healths)
+        np.sort(cards_healths)
+        features.append(cards_healths)
+
+        # Append cost
+        cards_costs = []
+        for card in deck['cards']:
+            enhanced = self.cards_enhancer.get_card(card)
+            count = deck['cards'][card]
+            for k in range(count):
+                cards_costs.append(enhanced['cost'] / 10)
+        cards_costs = np.array(cards_costs)
+        np.sort(cards_costs)
+        features.append(cards_costs)
 
         features = np.concatenate(features)
         return features

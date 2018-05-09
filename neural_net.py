@@ -9,17 +9,17 @@ from input_builder import InputBuilder
 from tester import test_model, generate_submission
 
 
-INPUT_SHAPE = 722
+INPUT_SHAPE = 722 + 180
 
 class NeuralNet(BaseModel):
     _layers = [1]
     _input_builder = None
-    learning_rate = 0.2
+    learning_rate = 0.1
     mb_size = 256
-    nb_epochs = 20000
+    nb_epochs = 10000
     dropout = 0.0
     # Each |lr_decay_time| epochs the learning rate is divided by two
-    lr_decay_time = 10000
+    lr_decay_time = 5000
 
     def _create_model(self) -> None:
         self.x = tf.placeholder(tf.float32, [None, INPUT_SHAPE])
@@ -72,11 +72,11 @@ class NeuralNet(BaseModel):
 
         def extract_winner(game):
             if game['winner'] == 0:
-                #return [1]
-                return [0.5 + game['winner_hp']/60]
+                return [1]
+                #return [0.5 + game['winner_hp']/60]
             else:
-                #return [0]
-                return [0.5 - game['winner_hp']/60]
+                return [0]
+                #return [0.5 - game['winner_hp']/60]
 
         self.games = []
         self.winners = []
@@ -152,9 +152,9 @@ class NeuralNet(BaseModel):
             winrate += self.predict_match_result(bot, deck, player[0], player[1])
         winrate /= len(self.training_results)
         print(winrate)
-        return max(20, min(80, winrate * 100))
+        return winrate * 100
 
 
 if __name__ == '__main__':
     test_model(NeuralNet)
-    #generate_submission(NeuralNet, {})
+    generate_submission(NeuralNet, {})
